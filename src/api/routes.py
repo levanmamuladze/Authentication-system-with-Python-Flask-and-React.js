@@ -1,59 +1,67 @@
 """
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
+import os
 from flask import Flask, request, jsonify, url_for, Blueprint
 from api.models import db, User
 from api.utils import generate_sitemap, APIException
 from flask_jwt_extended import create_access_token
-from flask import request, jsonify, redirect, url_for
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
-from flask_jwt_extended import JWTManager
 
+#                       CREATE FLASK APP
 api = Blueprint('api', __name__)
 
 
-@api.route('/signup', methods=['POST'])
-def signup():
-    email = request.json.get('email')
-    password = request.json.get('password')
+# Create a route to authenticate your users and return JWTs. The
+# create_access_token() function is used to actually generate the JWT.
+@api.route("/token", methods=["POST"])
+def login():
+    email = request.json.get("email", None)
+    password = request.json.get("password", None)
+    user = User.query.filter_by(email=email, password=password).first()
+    id= user.id
+    if user is None:
+        return jsonify({"msg": "Bad email or password"}), 401
 
-    # Create a new user in the database
-    user = User(email=email, password=password)
-    db.session.add(user)
+    access_token = create_access_token(identity=email)
+    return jsonify(access_token=access_token, id=id, email=email)
+
+
+@api.route("/signup", methods=['POST'])
+def sign_up():
+    data = request.get_json()
+
+    email = data.get("email")
+    password = data.get("password")
+
+    if not email:
+        return jsonify({"msg": "Email not provided"}), 400
+    if not password:
+        return jsonify({"msg": "Password not provided"}), 400
+
+    new_user = User(email=email, password=password)
+    db.session.add(new_user)
     db.session.commit()
 
-    return jsonify(message='User created successfully')
-
-# Login route
-@api.route('/login', methods=['POST'])
-def login():
-    email = request.json.get('email')
-    password = request.json.get('password')
-
-    # Authenticate the user
-    user = User.query.filter_by(email=email,password=password).first()
-    # if user and user.check_password(password):
-        # Generate an access token
-    access_token = create_access_token(identity=user.email)
-    return jsonify(access_token=access_token,email=email)
-    # else:
-    #     return jsonify(message='Invalid email or password'), 401
-
-# Private route
-@api.route('/private')
+    return jsonify(new_user.serialize()), 200
+@api.route("/user/<int:id>", methods=["GET"])
 @jwt_required()
-def private():
-    current_user_id = get_jwt_identity()
+def get_a_user(id):
 
-    # Check if the user is valid
-    user = User.query.get(current_user_id)
-    if not user:
-        return redirect(url_for('login'))
+   userInfo= User.query.get(id)
+   if userInfo is None:
+    return 'User not found', 404
 
-    return jsonify(message='Private dashboard')
+   return jsonify({'user': [userInfo.serialize()]}), 200
 
-# Logout route
-@api.route('/logout')
-def logout():
-    return jsonify(message='Logout successful')
+
+@api.route("/hello", methods=["GET"])
+@jwt_required()
+def get_hello():
+
+    dictionary= {
+        "message": "Hello bastard"
+    }
+
+    return jsonify(dictionary)

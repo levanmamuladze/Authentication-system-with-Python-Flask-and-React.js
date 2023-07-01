@@ -1,23 +1,23 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from 'react';
 import { Context } from "../store/appContext";
 import { useNavigate } from "react-router-dom";
 import "../../styles/home.css";
 
-export const Login = () => {
+export const Signup = () => {
   const { store, actions } = useContext(Context);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleClick = () => {
-    actions.login(email, password);
+  const handleSignUp = () => {
+    actions.signup(email, password);
   };
 
-  if (store.token !== null && store.token !== undefined) navigate("/private");
+  if (store.id !== null && store.id !== undefined) navigate("/login");
 
   return (
     <div className="m-auto w-50 my-3">
-      <h1>Login</h1>
+      <h1>Sign Up Form</h1>
       <div>
         <div className="my-3">
           <label htmlFor="exampleInputEmail1" className="form-label">
@@ -44,8 +44,8 @@ export const Login = () => {
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
-        <button className="btn btn-primary" onClick={handleClick}>
-          Login
+        <button className="btn btn-primary" onClick={handleSignUp}>
+          Sign Up
         </button>
       </div>
     </div>

@@ -13,6 +13,7 @@ from api.admin import setup_admin
 from api.commands import setup_commands
 from flask_jwt_extended import JWTManager
 
+
 #from models import Person
 
 ENV = os.getenv("FLASK_ENV")
@@ -20,7 +21,8 @@ static_file_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../
 app = Flask(__name__)
 app.url_map.strict_slashes = False
 
-app.config["JWT_SECRET_KEY"] = "123qwe"  # Change this!
+# Setup the Flask-JWT-Extended extension ---- FIJATE QUE DEBE COINCIDIR EL FLASK APP con jwt
+app.config["JWT_SECRET_KEY"] = os.environ.get('FLASK_SECRET')  # Change this!
 jwt = JWTManager(app)
 
 # database condiguration
